@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Ayuh Solat</string>
+    <string name="settings_button">Settings</string>
+    <string name="channel_name">Ayuh_Solat</string>
+    <string name="channel_description">Waktu Solat Notification</string>
+    <string-array name="negeri">
+        <item>JOHOR</item>
+        <item>KEDAH</item>
+        <item>KELANTAN</item>
+        <item>MELAKA</item>
+        <item>NEGERI SEMBILAN</item>
+        <item>PAHANG</item>
+        <item>PERLIS</item>
+        <item>PULAU PINANG</item>
+        <item>PERAK</item>
+        <item>SABAH</item>
+        <item>SELANGOR</item>
+        <item>SARAWAK</item>
+        <item>TERENGGANU</item>
+        <item>WILAYAH PERSEKUTUAN</item>
+    </string-array>
+</resources>
