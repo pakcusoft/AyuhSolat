@@ -34,12 +34,19 @@ public class ReminderScheduler {
             DataPrayerTime dataPrayerTime = gson.fromJson(defPrayerTime, DataPrayerTime.class);
             AlarmData nextAlarm = getNext(dataPrayerTime);
             AlarmManager alarmManager = (AlarmManager) ctx.getSystemService(ALARM_SERVICE);
+
             Intent alarmIntent = new Intent(ctx, AlarmReceiver.class);
             alarmIntent.putExtra("reminder", nextAlarm.reminder);
             alarmIntent.putExtra("time", nextAlarm.waktuSolat.toString());
             PendingIntent pendingIntent = PendingIntent.getBroadcast(ctx, REQ_CODE,
                     alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextAlarm.time.getTimeInMillis(), pendingIntent);
+//            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextAlarm.time.getTimeInMillis(), pendingIntent);
+
+            Intent newIntent = new Intent(ctx, MainActivity.class);
+            newIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent newPendingIntent = PendingIntent.getActivity(ctx, 0, newIntent, 0);
+            alarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(nextAlarm.time.getTimeInMillis(), newPendingIntent), pendingIntent);
+
             if (nextAlarm.reminder) {
                 return "Notis Seterusnya: " + REMINDER_BEFORE_MINUTE + " minit sebelum " + Utils.toDisplayTime(nextAlarm.waktuSolat.time);
             } else {
@@ -71,7 +78,7 @@ public class ReminderScheduler {
                                 .withNano(0);
                         if (now.isBefore(tsolat)) {
                             LocalDateTime reminder = tsolat.minusMinutes(REMINDER_BEFORE_MINUTE);
-                            if (now.isBefore(reminder)) {
+                            if (now.plusMinutes(1).isBefore(reminder)) {
                                 return new AlarmData(w,
                                         GregorianCalendar.from(ZonedDateTime.of(reminder, ZoneId.systemDefault())),
                                         true);

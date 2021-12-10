@@ -1,5 +1,7 @@
 package net.pakcusoft.solat;
 
+import android.text.TextUtils;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -11,9 +13,20 @@ public class Utils {
     private static final SimpleDateFormat t12f = new SimpleDateFormat("h:mm a");
 
     public static String capitalize(String str) {
-        String retStr = str;
+        if (TextUtils.isEmpty(str)) {
+            return str;
+        }
+        String retStr = "";
         try {
-            retStr = str.substring(0, 1).toUpperCase() + str.substring(1);
+            String[] parts = str.split(" ");
+            for (String part : parts) {
+                if (part.length() > 1) {
+                    retStr += part.substring(0, 1).toUpperCase() + part.substring(1).toLowerCase() + " ";
+                } else {
+                    retStr += part;
+                }
+            }
+            retStr = retStr.trim();
         } catch (Exception e) {
             e.printStackTrace();
         }

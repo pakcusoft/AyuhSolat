@@ -1,21 +1,26 @@
 package net.pakcusoft.solat;
 
-import static net.pakcusoft.solat.AlarmReceiver.CHANNEL_ID;
+import static net.pakcusoft.solat.AlarmReceiver.CHANNEL_AZAN_ID;
+import static net.pakcusoft.solat.AlarmReceiver.CHANNEL_REMINDER_ID;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.JsonReader;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,10 +35,8 @@ import net.pakcusoft.solat.service.EsolatService;
 import net.pakcusoft.solat.service.JakimService;
 import net.pakcusoft.solat.service.MainService;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashMap;
@@ -146,6 +149,7 @@ public class MainActivity extends AppCompatActivity {
                         if (ret != null) {
                             binding.txtReminderSts.setText(ret);
                         }
+                        updateWidget(true);
                     }
                 }
 
@@ -162,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
             if (ret != null) {
                 binding.txtReminderSts.setText(ret);
             }
+            updateWidget(false);
         }
     }
 
@@ -198,11 +203,16 @@ public class MainActivity extends AppCompatActivity {
             if (waktuSolat.name.equalsIgnoreCase(Constant.IMSAK)) {
                 continue;
             }
+            if (waktuSolat.name.equalsIgnoreCase(Constant.SYURUK)) {
+                continue;
+            }
             LocalTime solatTime = LocalTime.parse(waktuSolat.time);
             if (now.isAfter(solatTime)) {
                 LocalTime nextSolatTime;
                 if (waktuSolat.name.equalsIgnoreCase(Constant.ISYAK)) {
                     nextSolatTime = LocalTime.MAX;
+                } else if (waktuSolat.name.equalsIgnoreCase(Constant.SUBUH)) {
+                    nextSolatTime = Utils.toLocalTime(pt.get(Constant.SYURUK));
                 } else {
                     String nw = Constant.getNext(waktuSolat.name);
                     nextSolatTime = Utils.toLocalTime(pt.get(nw));
@@ -217,22 +227,37 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void updateWidget(boolean dataChanged) {
+        Intent fromIntent = getIntent();
+        if (fromIntent != null || dataChanged) {
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+            RemoteViews views = new RemoteViews(getPackageName(), R.layout.solat_widget);
+            SolatWidget.setupData(this, views);
+            appWidgetManager.updateAppWidget(new ComponentName(this.getPackageName(), SolatWidget.class.getName()), views);
+        }
+    }
+
     private static void createNotificationChannel(Context ctx) {
-        // Create the NotificationChannel, but only on API 26+ because
-        // the NotificationChannel class is new and not in the support library
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = ctx.getString(R.string.channel_name);
-            String description = ctx.getString(R.string.channel_description);
-            int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
-            channel.setDescription(description);
-            channel.enableVibration(true);
-            channel.enableLights(true);
-            channel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), Notification.AUDIO_ATTRIBUTES_DEFAULT);
-            // Register the channel with the system; you can't change the importance
-            // or other notification behaviors after this
             NotificationManager notificationManager = ctx.getSystemService(NotificationManager.class);
-            notificationManager.createNotificationChannel(channel);
+            if (notificationManager.getNotificationChannel(CHANNEL_AZAN_ID) == null) {
+                NotificationChannel channel = new NotificationChannel(CHANNEL_AZAN_ID, "Azan", NotificationManager.IMPORTANCE_HIGH);
+                channel.setDescription("Notifikasi masuk waktu solat");
+                channel.enableVibration(true);
+                channel.enableLights(true);
+                channel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), Notification.AUDIO_ATTRIBUTES_DEFAULT);
+                Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://"+ ctx.getApplicationContext().getPackageName() + "/" + R.raw.azanshortkfmi);
+                channel.setSound(soundUri, Notification.AUDIO_ATTRIBUTES_DEFAULT);
+                notificationManager.createNotificationChannel(channel);
+            }
+            if (notificationManager.getNotificationChannel(CHANNEL_REMINDER_ID) == null) {
+                NotificationChannel channel = new NotificationChannel(CHANNEL_REMINDER_ID, "Solat Reminder", NotificationManager.IMPORTANCE_HIGH);
+                channel.setDescription("Notifikasi peringatan sebelum masuk waktu solat");
+                channel.enableVibration(true);
+                channel.enableLights(true);
+                channel.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION), Notification.AUDIO_ATTRIBUTES_DEFAULT);
+                notificationManager.createNotificationChannel(channel);
+            }
         }
     }
 

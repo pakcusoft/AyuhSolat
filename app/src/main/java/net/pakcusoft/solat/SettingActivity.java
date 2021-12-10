@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -28,8 +29,9 @@ import retrofit2.Response;
 
 public class SettingActivity extends AppCompatActivity {
 
-    public static final String STATE_LIST = "def_state_list";
-    public static final String ZONE_LIST = "def_zone_line";
+    public static final String ZONE_LIST = "def_zone_list";
+    public static final String SETTING_REMINDER_AZAN = "rem_azan";
+    public static final String SETTING_REMINDER_EARLY = "rem_early";
 
     private String state;
     private String zone;
@@ -55,6 +57,26 @@ public class SettingActivity extends AppCompatActivity {
         SharedPreferences sharedPref = getSharedPreferences(GLOBAL, Context.MODE_PRIVATE);
         state = sharedPref.getString(DEFAULT_STATE, "selangor");
         zone = sharedPref.getString(DEFAULT_ZONE, "petaling");
+        boolean remAzan = sharedPref.getBoolean(SETTING_REMINDER_AZAN, true);
+        boolean remEarly = sharedPref.getBoolean(SETTING_REMINDER_EARLY, true);
+        binding.switchAzan.setChecked(remAzan);
+        binding.switchAzan.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putBoolean(SETTING_REMINDER_AZAN, isChecked);
+                editor.apply();
+            }
+        });
+        binding.switchReminder.setChecked(remEarly);
+        binding.switchReminder.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                SharedPreferences.Editor editor = sharedPref.edit();
+                editor.putBoolean(SETTING_REMINDER_EARLY, isChecked);
+                editor.apply();
+            }
+        });
         setupNegeri();
         String zoneList = sharedPref.getString(ZONE_LIST, null);
         if (zoneList == null) {

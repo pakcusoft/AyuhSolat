@@ -15,4 +15,6 @@
     <color name="black_overlay">#BE000000</color>
     <color name="black_overlay_light">#66000000</color>
     <color name="dark_red">#9C1C1C</color>
+    <color name="light_blue_50">#FFE1F5FE</color>
+    <color name="light_blue_200">#FF81D4FA</color>
 </resources>
