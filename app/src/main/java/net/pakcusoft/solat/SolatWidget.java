@@ -64,10 +64,7 @@ public class SolatWidget extends AppWidgetProvider {
 //        String textZone = String.format("%s (%s)", Utils.capitalize(state), Utils.capitalize(zone));
         String textZone = Utils.capitalize(zone);
 //        views.setTextViewText(R.id.txt_zone_w, String.format("%s (%s)", Utils.capitalize(state), Utils.capitalize(zone)));
-        final String today = LocalDate.now().toString();
-        String[] part = today.split("-");
-        String todayDate = String.format("%s %s %s", part[2], Constant.bulan.get(part[1]), part[0]);
-        String defDate = sharedPref.getString(DEFAULT_DATE, todayDate);
+        String defDate = sharedPref.getString(DEFAULT_DATE, "");
         if (defDate.indexOf("|") > 0) {
             views.setTextViewText(R.id.txt_date_w, defDate.split("\\|")[1] + " | " + textZone);
         } else {

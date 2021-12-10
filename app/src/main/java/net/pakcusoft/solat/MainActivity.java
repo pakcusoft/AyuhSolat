@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
         String todayDate = String.format("%s %s %s", part[2], Constant.bulan.get(part[1]), part[0]);
         String defPrayerTime = null;
         String defDate = sharedPref.getString(DEFAULT_DATE, null);
-        if (defDate == null || !defDate.startsWith(todayDate)) {
+        if (defDate == null || !defDate.startsWith(todayDate) || !defDate.contains("|")) {
             binding.txtDate.setText(todayDate);
             EsolatService esolatService = JakimService.getService();
             Call<ResponseBody> call = esolatService.getHijriDate(today);
