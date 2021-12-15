@@ -1,17 +1,18 @@
 package net.pakcusoft.solat;
 
-import static net.pakcusoft.solat.MainActivity.DEFAULT_STATE;
-import static net.pakcusoft.solat.MainActivity.DEFAULT_ZONE;
 import static net.pakcusoft.solat.MainActivity.GLOBAL;
 import static net.pakcusoft.solat.SettingActivity.SETTING_REMINDER_AZAN;
 import static net.pakcusoft.solat.SettingActivity.SETTING_REMINDER_EARLY;
 
 import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
+import android.widget.RemoteViews;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -29,16 +30,29 @@ public class AlarmReceiver extends BroadcastReceiver {
         boolean remAzan = sharedPref.getBoolean(SETTING_REMINDER_AZAN, true);
         boolean remEarly = sharedPref.getBoolean(SETTING_REMINDER_EARLY, true);
 
-        boolean reminder = intent.getBooleanExtra("reminder", false);
-        if (reminder && !remEarly) {
-            ReminderScheduler.nextSchedule(ctx);
-            return;
-        }
-        if (!reminder && !remAzan) {
-            ReminderScheduler.nextSchedule(ctx);
-            return;
-        }
         String[] time = intent.getStringExtra("time").split("\\|");
+        boolean reminder = intent.getBooleanExtra("reminder", false);
+        boolean specialAlarm = intent.getBooleanExtra("specialAlarm", false);
+        if (!reminder) {
+            updateWidget(ctx);
+        }
+        if (reminder) {
+            if (specialAlarm) {
+                ReminderScheduler.nextSchedule(ctx);
+                updateWidget(ctx);
+                return;
+            } else {
+                if (!remEarly) {
+                    ReminderScheduler.nextSchedule(ctx);
+                    return;
+                }
+            }
+        } else {
+            if (!remAzan || Constant.SYURUK.equalsIgnoreCase(time[0])) {
+                ReminderScheduler.nextSchedule(ctx);
+                return;
+            }
+        }
         String title = (reminder? "Ingat " : "Waktu ") + Utils.capitalize(time[0]);
         String description = (reminder? "Akan masuk pada " : "Telah masuk pada ") + Utils.toDisplayTime(time[1]);
 
@@ -63,6 +77,13 @@ public class AlarmReceiver extends BroadcastReceiver {
         Log.d("XXX", "Sending notification");
         Log.d("XXX", "time: " + time);
         Log.d("XXX", "reminder: " + reminder);
+    }
+
+    private void updateWidget(Context ctx) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(ctx);
+        RemoteViews views = new RemoteViews(ctx.getPackageName(), R.layout.solat_widget);
+        SolatWidget.setupData(ctx, views);
+        appWidgetManager.updateAppWidget(new ComponentName(ctx.getPackageName(), SolatWidget.class.getName()), views);
     }
 
 }

@@ -3,6 +3,7 @@ package net.pakcusoft.solat;
 import static net.pakcusoft.solat.AlarmReceiver.CHANNEL_AZAN_ID;
 import static net.pakcusoft.solat.AlarmReceiver.CHANNEL_REMINDER_ID;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -27,24 +28,16 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import com.google.gson.Gson;
-
-import net.pakcusoft.solat.data.DataPrayerTime;
+import net.pakcusoft.solat.data.ESolatData;
+import net.pakcusoft.solat.data.WaktuSolat;
 import net.pakcusoft.solat.databinding.ActivityMainBinding;
 import net.pakcusoft.solat.service.EsolatService;
-import net.pakcusoft.solat.service.JakimService;
-import net.pakcusoft.solat.service.MainService;
-
-import org.json.JSONObject;
+import net.pakcusoft.solat.service.EsolatServiceListener;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashMap;
-
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
     public static final String DEFAULT_ZONE = "def_zone";
     public static final String DEFAULT_DATE = "def_date";
     public static final String DEFAULT_PRAYER_TIME = "def_prayer_time";
+    public static final String DEFAULT_STATE_SELECTED = "Wilayah Persekutuan";
+    public static final String DEFAULT_ZONE_SELECTED = "Kuala Lumpur";
 
     private ActivityMainBinding binding;
 
@@ -64,7 +59,6 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setElevation(0);
 
         createNotificationChannel(this);
-        //setupData(); //FIXME: onResume will call this??
     }
 
     @Override
@@ -88,92 +82,74 @@ public class MainActivity extends AppCompatActivity {
 
     private void setupData() {
         SharedPreferences sharedPref = getSharedPreferences(GLOBAL, Context.MODE_PRIVATE);
-        String state = sharedPref.getString(DEFAULT_STATE, "selangor");
-        String zone = sharedPref.getString(DEFAULT_ZONE, "petaling");
+        String state = sharedPref.getString(DEFAULT_STATE, DEFAULT_STATE_SELECTED);
+        String zone = sharedPref.getString(DEFAULT_ZONE, DEFAULT_ZONE_SELECTED);
         Log.d("XXX", "Current state: " + state);
         Log.d("XXX", "Current zone: " + zone);
-        binding.txtZoneInfo.setText(String.format("%s (%s)", Utils.capitalize(state), Utils.capitalize(zone)));
+        if (zone.indexOf("(") > 0) {
+            binding.txtZoneInfo.setText(String.format("%s - %s", state, zone));
+        } else {
+            binding.txtZoneInfo.setText(String.format("%s (%s)", state, zone));
+        }
         final String today = LocalDate.now().toString();
         String[] part = today.split("-");
         String todayDate = String.format("%s %s %s", part[2], Constant.bulan.get(part[1]), part[0]);
-        String defPrayerTime = null;
         String defDate = sharedPref.getString(DEFAULT_DATE, null);
-        if (defDate == null || !defDate.startsWith(todayDate) || !defDate.contains("|")) {
-            binding.txtDate.setText(todayDate);
-            EsolatService esolatService = JakimService.getService();
-            Call<ResponseBody> call = esolatService.getHijriDate(today);
-            call.enqueue(new Callback<ResponseBody>() {
+        String defPrayerTime = sharedPref.getString(DEFAULT_PRAYER_TIME, null);
+        final Context ctx = this;
+        if (defDate == null || !defDate.startsWith(todayDate) || defPrayerTime == null) {
+            new EsolatService().getSolatTime(Constant.getZoneId(state, zone), new EsolatServiceListener() {
                 @Override
-                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                    if (response.isSuccessful()) {
-                        try {
-                            JSONObject obj = new JSONObject(response.body().string());
-                            String hdate = obj.getJSONObject("takwim").getString(today);
-                            String[] hpart = hdate.split("-");
-                            String todayHDate = String.format("%s %s %s", hpart[2], Constant.bulanIslam.get(hpart[1]), hpart[0]);
-                            String displayDate = todayDate + " | " + todayHDate;
+                public void complete(String response) {
+                    ESolatData data = Utils.convertJson(response);
+                    String hdate = data.getDate();
+                    String[] hpart = hdate.split("-");
+                    String todayHDate = String.format("%s %s %s", hpart[2], Constant.bulanIslam.get(hpart[1]), hpart[0]);
+                    String displayDate = todayDate + " | " + todayHDate;
+                    setTiming(data.getWaktuSolatList());
+                    SharedPreferences.Editor editor = sharedPref.edit();
+                    editor.putString(DEFAULT_PRAYER_TIME, response);
+                    editor.putString(DEFAULT_DATE, displayDate);
+                    editor.apply();
+                    String ret = ReminderScheduler.nextSchedule(ctx);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
                             binding.txtDate.setText(displayDate);
-                            SharedPreferences.Editor editor = sharedPref.edit();
-                            editor.putString(DEFAULT_DATE, displayDate);
-                            editor.apply();
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                            if (ret != null) {
+                                binding.txtReminderSts.setText(ret);
+                            }
                         }
-                    }
+                    });
+                    updateWidget(ctx, true);
                 }
 
                 @Override
-                public void onFailure(Call<ResponseBody> call, Throwable t) {
-
+                public void failure(Throwable t) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
                 }
             });
         } else {
             binding.txtDate.setText(defDate);
-            defPrayerTime = sharedPref.getString(DEFAULT_PRAYER_TIME, null);
-        }
-        final Context ctx = this;
-        if (defPrayerTime == null) {
-            //get prayer time based on default data
-            Call<DataPrayerTime> prayerTimeCall = MainService.getService().getPrayerTime(state, zone);
-            prayerTimeCall.enqueue(new Callback<DataPrayerTime>() {
-                @Override
-                public void onResponse(Call<DataPrayerTime> call, Response<DataPrayerTime> response) {
-                    if (response.isSuccessful()) {
-                        DataPrayerTime dataPrayerTime = response.body();
-                        setTiming(dataPrayerTime);
-                        SharedPreferences.Editor editor = sharedPref.edit();
-                        Gson gson = new Gson();
-                        editor.putString(DEFAULT_PRAYER_TIME, gson.toJson(dataPrayerTime));
-                        editor.apply();
-                        String ret = ReminderScheduler.nextSchedule(ctx);
-                        if (ret != null) {
-                            binding.txtReminderSts.setText(ret);
-                        }
-                        updateWidget(true);
-                    }
-                }
-
-                @Override
-                public void onFailure(Call<DataPrayerTime> call, Throwable t) {
-                    Toast.makeText(MainActivity.this, t.getMessage(), Toast.LENGTH_LONG).show();
-                }
-            });
-        } else {
-            Gson gson = new Gson();
-            DataPrayerTime dataPrayerTime = gson.fromJson(defPrayerTime, DataPrayerTime.class);
-            setTiming(dataPrayerTime);
+            ESolatData data = Utils.convertJson(defPrayerTime);
+            setTiming(data.getWaktuSolatList());
             String ret = ReminderScheduler.nextSchedule(ctx);
             if (ret != null) {
                 binding.txtReminderSts.setText(ret);
             }
-            updateWidget(false);
+            updateWidget(ctx, false);
         }
     }
 
-    private void setTiming(DataPrayerTime dataPrayerTime) {
+    private void setTiming(List<WaktuSolat> waktuSolatList) {
         HashMap<String, String> pt = new HashMap<>();
-        for (DataPrayerTime.WaktuSolat waktuSolat : dataPrayerTime.data.zon.get(0).waktu_solat) {
-            pt.put(waktuSolat.name.toLowerCase(), Utils.toDisplayTime(waktuSolat.time));
+        for (WaktuSolat waktuSolat : waktuSolatList) {
+            pt.put(waktuSolat.getName().toLowerCase(), Utils.toDisplayTime(waktuSolat.getTime()));
         }
         binding.txtValueSubuh.setText(pt.get(Constant.SUBUH));
         binding.txtValueSyuruk.setText(pt.get(Constant.SYURUK));
@@ -181,10 +157,10 @@ public class MainActivity extends AppCompatActivity {
         binding.txtValueAsar.setText(pt.get(Constant.ASAR));
         binding.txtValueMaghrib.setText(pt.get(Constant.MAGHRIB));
         binding.txtValueIsyak.setText(pt.get(Constant.ISYAK));
-        setCurrentWaktu(dataPrayerTime, pt);
+        setCurrentWaktu(waktuSolatList, pt);
     }
 
-    private void setCurrentWaktu(DataPrayerTime dataPrayerTime, HashMap<String, String> pt) {
+    private void setCurrentWaktu(List<WaktuSolat> waktuSolatList, HashMap<String, String> pt) {
         HashMap<String, TextView> temp = new HashMap<>();
         temp.put(Constant.SUBUH, binding.txtValueSubuh);
         temp.put(Constant.SYURUK, binding.txtValueSyuruk);
@@ -199,27 +175,27 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         LocalTime now = LocalTime.now();
-        for (DataPrayerTime.WaktuSolat waktuSolat : dataPrayerTime.data.zon.get(0).waktu_solat) {
-            if (waktuSolat.name.equalsIgnoreCase(Constant.IMSAK)) {
+        for (WaktuSolat waktuSolat : waktuSolatList) {
+            if (waktuSolat.getName().equalsIgnoreCase(Constant.IMSAK)) {
                 continue;
             }
-            if (waktuSolat.name.equalsIgnoreCase(Constant.SYURUK)) {
+            if (waktuSolat.getName().equalsIgnoreCase(Constant.SYURUK)) {
                 continue;
             }
-            LocalTime solatTime = LocalTime.parse(waktuSolat.time);
+            LocalTime solatTime = LocalTime.parse(waktuSolat.getTime());
             if (now.isAfter(solatTime)) {
                 LocalTime nextSolatTime;
-                if (waktuSolat.name.equalsIgnoreCase(Constant.ISYAK)) {
+                if (waktuSolat.getName().equalsIgnoreCase(Constant.ISYAK)) {
                     nextSolatTime = LocalTime.MAX;
-                } else if (waktuSolat.name.equalsIgnoreCase(Constant.SUBUH)) {
+                } else if (waktuSolat.getName().equalsIgnoreCase(Constant.SUBUH)) {
                     nextSolatTime = Utils.toLocalTime(pt.get(Constant.SYURUK));
                 } else {
-                    String nw = Constant.getNext(waktuSolat.name);
+                    String nw = Constant.getNext(waktuSolat.getName());
                     nextSolatTime = Utils.toLocalTime(pt.get(nw));
                 }
                 if (now.isBefore(nextSolatTime)) {
-                    if (temp.containsKey(waktuSolat.name)) {
-                        temp.get(waktuSolat.name).setTextColor(ContextCompat.getColor(this, R.color.dark_red));
+                    if (temp.containsKey(waktuSolat.getName())) {
+                        temp.get(waktuSolat.getName()).setTextColor(ContextCompat.getColor(this, R.color.dark_red));
                         break;
                     }
                 }
@@ -227,13 +203,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void updateWidget(boolean dataChanged) {
-        Intent fromIntent = getIntent();
+    public static void updateWidget(Context ctx, boolean dataChanged) {
+        Intent fromIntent = null;
+        if (ctx instanceof Activity) {
+            fromIntent = ((Activity) ctx).getIntent();
+        }
         if (fromIntent != null || dataChanged) {
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
-            RemoteViews views = new RemoteViews(getPackageName(), R.layout.solat_widget);
-            SolatWidget.setupData(this, views);
-            appWidgetManager.updateAppWidget(new ComponentName(this.getPackageName(), SolatWidget.class.getName()), views);
+            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(ctx);
+            RemoteViews views = new RemoteViews(ctx.getPackageName(), R.layout.solat_widget);
+            SolatWidget.setupData(ctx, views);
+            appWidgetManager.updateAppWidget(new ComponentName(ctx.getPackageName(), SolatWidget.class.getName()), views);
         }
     }
 

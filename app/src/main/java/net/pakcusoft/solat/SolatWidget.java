@@ -12,30 +12,16 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
 
-import com.google.gson.Gson;
+import net.pakcusoft.solat.data.ESolatData;
+import net.pakcusoft.solat.data.WaktuSolat;
 
-import net.pakcusoft.solat.data.DataPrayerTime;
-import net.pakcusoft.solat.service.EsolatService;
-import net.pakcusoft.solat.service.JakimService;
-import net.pakcusoft.solat.service.MainService;
-
-import org.json.JSONObject;
-
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashMap;
-
-import okhttp3.ResponseBody;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import java.util.List;
 
 /**
  * Implementation of App Widget functionality.
@@ -59,29 +45,23 @@ public class SolatWidget extends AppWidgetProvider {
 
     public static void setupData(Context context, RemoteViews views) {
         SharedPreferences sharedPref = context.getSharedPreferences(GLOBAL, Context.MODE_PRIVATE);
-        String state = sharedPref.getString(DEFAULT_STATE, "selangor");
-        String zone = sharedPref.getString(DEFAULT_ZONE, "petaling");
-//        String textZone = String.format("%s (%s)", Utils.capitalize(state), Utils.capitalize(zone));
-        String textZone = Utils.capitalize(zone);
-//        views.setTextViewText(R.id.txt_zone_w, String.format("%s (%s)", Utils.capitalize(state), Utils.capitalize(zone)));
-        String defDate = sharedPref.getString(DEFAULT_DATE, "");
-        if (defDate.indexOf("|") > 0) {
-            views.setTextViewText(R.id.txt_date_w, defDate.split("\\|")[1] + " | " + textZone);
-        } else {
-            views.setTextViewText(R.id.txt_date_w, textZone);
-        }
-        String defPrayerTime = sharedPref.getString(DEFAULT_PRAYER_TIME, null);
-        if (defPrayerTime != null) {
-            Gson gson = new Gson();
-            DataPrayerTime dataPrayerTime = gson.fromJson(defPrayerTime, DataPrayerTime.class);
-            setTiming(context, dataPrayerTime, views);
+        String state = sharedPref.getString(DEFAULT_STATE, "Wilayah Persekutuan");
+        String zone = sharedPref.getString(DEFAULT_ZONE, "Kuala Lumpur");
+        String defDate = sharedPref.getString(DEFAULT_DATE, null);
+        if (defDate != null) {
+            views.setTextViewText(R.id.txt_date_w, defDate.split("\\|")[1] + " | " + zone);
+            String defPrayerTime = sharedPref.getString(DEFAULT_PRAYER_TIME, null);
+            if (defPrayerTime != null) {
+                ESolatData data = Utils.convertJson(defPrayerTime);
+                setTiming(context, data.getWaktuSolatList(), views);
+            }
         }
     }
 
-    public static void setTiming(Context context, DataPrayerTime dataPrayerTime, RemoteViews views) {
+    public static void setTiming(Context context, List<WaktuSolat> waktuSolatList, RemoteViews views) {
         HashMap<String, String> pt = new HashMap<>();
-        for (DataPrayerTime.WaktuSolat waktuSolat : dataPrayerTime.data.zon.get(0).waktu_solat) {
-            pt.put(waktuSolat.name.toLowerCase(), Utils.toDisplayTime(waktuSolat.time).toLowerCase());
+        for (WaktuSolat waktuSolat : waktuSolatList) {
+            pt.put(waktuSolat.getName().toLowerCase(), Utils.toDisplayTime(waktuSolat.getTime()).toLowerCase());
         }
         views.setTextViewText(R.id.txt_value_subuh_w, pt.get(Constant.SUBUH));
         views.setTextViewText(R.id.txt_value_syuruk_w, pt.get(Constant.SYURUK));
@@ -89,10 +69,10 @@ public class SolatWidget extends AppWidgetProvider {
         views.setTextViewText(R.id.txt_value_asar_w, pt.get(Constant.ASAR));
         views.setTextViewText(R.id.txt_value_maghrib_w, pt.get(Constant.MAGHRIB));
         views.setTextViewText(R.id.txt_value_isyak_w, pt.get(Constant.ISYAK));
-        setCurrentWaktu(context, dataPrayerTime, pt, views);
+        setCurrentWaktu(context, waktuSolatList, pt, views);
     }
 
-    public static void setCurrentWaktu(Context context, DataPrayerTime dataPrayerTime, HashMap<String, String> pt, RemoteViews views) {
+    public static void setCurrentWaktu(Context context, List<WaktuSolat> waktuSolatList, HashMap<String, String> pt, RemoteViews views) {
         HashMap<String, Integer> temp = new HashMap<>();
         temp.put(Constant.SUBUH, R.id.txt_value_subuh_w);
         temp.put(Constant.SYURUK, R.id.txt_value_syuruk_w);
@@ -104,31 +84,32 @@ public class SolatWidget extends AppWidgetProvider {
         for (String waktu : pt.keySet()) {
             if (temp.containsKey(waktu)) {
                 views.setTextColor(temp.get(waktu), ContextCompat.getColor(context, R.color.black_overlay));
+                views.setInt(temp.get(waktu), "setBackgroundResource", R.drawable.widget_solat_box);
             }
         }
         LocalTime now = LocalTime.now();
-        for (DataPrayerTime.WaktuSolat waktuSolat : dataPrayerTime.data.zon.get(0).waktu_solat) {
-            if (waktuSolat.name.equalsIgnoreCase(Constant.IMSAK)) {
+        for (WaktuSolat waktuSolat : waktuSolatList) {
+            if (waktuSolat.getName().equalsIgnoreCase(Constant.IMSAK)) {
                 continue;
             }
-            if (waktuSolat.name.equalsIgnoreCase(Constant.SYURUK)) {
+            if (waktuSolat.getName().equalsIgnoreCase(Constant.SYURUK)) {
                 continue;
             }
-            LocalTime solatTime = LocalTime.parse(waktuSolat.time);
+            LocalTime solatTime = LocalTime.parse(waktuSolat.getTime());
             if (now.isAfter(solatTime)) {
                 LocalTime nextSolatTime;
-                if (waktuSolat.name.equalsIgnoreCase(Constant.ISYAK)) {
+                if (waktuSolat.getName().equalsIgnoreCase(Constant.ISYAK)) {
                     nextSolatTime = LocalTime.MAX;
-                } else if (waktuSolat.name.equalsIgnoreCase(Constant.SUBUH)) {
+                } else if (waktuSolat.getName().equalsIgnoreCase(Constant.SUBUH)) {
                     nextSolatTime = Utils.toLocalTime(pt.get(Constant.SYURUK));
                 } else {
-                    String nw = Constant.getNext(waktuSolat.name);
+                    String nw = Constant.getNext(waktuSolat.getName());
                     nextSolatTime = Utils.toLocalTime(pt.get(nw));
                 }
                 if (now.isBefore(nextSolatTime)) {
-                    if (temp.containsKey(waktuSolat.name)) {
-                        views.setTextColor(temp.get(waktuSolat.name), ContextCompat.getColor(context, R.color.white));
-                        views.setInt(temp.get(waktuSolat.name), "setBackgroundColor", ContextCompat.getColor(context, R.color.dark_blue));
+                    if (temp.containsKey(waktuSolat.getName())) {
+                        views.setTextColor(temp.get(waktuSolat.getName()), ContextCompat.getColor(context, R.color.white));
+                        views.setInt(temp.get(waktuSolat.getName()), "setBackgroundColor", ContextCompat.getColor(context, R.color.dark_blue));
                         break;
                     }
                 }

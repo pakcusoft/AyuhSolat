@@ -2,11 +2,20 @@ package net.pakcusoft.solat;
 
 import android.text.TextUtils;
 
+import net.pakcusoft.solat.data.ESolatData;
+import net.pakcusoft.solat.data.WaktuSolat;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Utils {
     private static final SimpleDateFormat t24f = new SimpleDateFormat("HH:mm");
@@ -50,5 +59,22 @@ public class Utils {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public static ESolatData convertJson(String defPrayerTime) {
+        List<WaktuSolat> waktuSolatList = new ArrayList<>();
+        String dateHijri = "";
+        try {
+            JSONObject obj = new JSONObject(defPrayerTime);
+            JSONArray jsonArray = obj.getJSONArray("prayerTime");
+            JSONObject pObj = jsonArray.getJSONObject(0);
+            dateHijri = pObj.getString("hijri");
+            for (String waktu : Constant.solat) {
+                waktuSolatList.add(new WaktuSolat(waktu, pObj.getString(Constant.getWaktuCode(waktu))));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new ESolatData(dateHijri, waktuSolatList);
     }
 }
