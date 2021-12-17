@@ -1,4 +1,4 @@
-# AyuhSolat
+# AyuhSolat [Android App]
 
 Waktu Solat Malaysia yang ringkas dan sederhana.
 
