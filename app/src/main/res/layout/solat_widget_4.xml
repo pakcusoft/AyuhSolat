@@ -37,15 +37,6 @@
                 android:textColor="@color/black_overlay" />
 
             <TextView
-                android:id="@+id/txtlabele_syuruk_w"
-                android:layout_width="50dp"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:text="Syuruk"
-                android:textFontWeight="500"
-                android:textColor="@color/black_overlay" />
-
-            <TextView
                 android:id="@+id/txlabelue_zohor_w"
                 android:layout_width="50dp"
                 android:layout_height="wrap_content"
@@ -89,15 +80,6 @@
 
             <TextView
                 android:id="@+id/txt_value_subuh_w"
-                android:layout_width="50dp"
-                android:layout_height="wrap_content"
-                android:background="@drawable/widget_solat_box"
-                android:gravity="center"
-                android:text="00:00a"
-                android:textColor="@color/black_overlay" />
-
-            <TextView
-                android:id="@+id/txt_value_syuruk_w"
                 android:layout_width="50dp"
                 android:layout_height="wrap_content"
                 android:background="@drawable/widget_solat_box"

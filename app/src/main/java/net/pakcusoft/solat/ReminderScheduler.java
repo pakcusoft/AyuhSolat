@@ -67,7 +67,10 @@ public class ReminderScheduler {
 
                 @Override
                 public void failure(Throwable t) {
-
+                    //if fail, just use existing
+                    if (defPrayerTime != null) {
+                        doNextSchedule(ctx, sharedPref, defPrayerTime);
+                    }
                 }
             });
         } else {
@@ -144,17 +147,14 @@ public class ReminderScheduler {
             }
         }
         //if reach here, it means its after isyak, set reminder to after midnight so can get fresh schedule for tomorrow
-        if (now.isBefore(now.withHour(23).withMinute(59).withSecond(59))) {
-            LocalDateTime reminder = now
-                    .plusDays(1)
-                    .withHour(0)
-                    .withMinute(0)
-                    .withSecond(1);
-            return new AlarmData(pt.get(Constant.SUBUH),
-                    GregorianCalendar.from(ZonedDateTime.of(reminder, ZoneId.systemDefault())),
-                    true, true);
-        }
-        return null; //cannot reach here!!!
+        LocalDateTime reminder = now
+                .plusDays(1)
+                .withHour(0)
+                .withMinute(0)
+                .withSecond(1);
+        return new AlarmData(pt.get(Constant.SUBUH),
+                GregorianCalendar.from(ZonedDateTime.of(reminder, ZoneId.systemDefault())),
+                true, true);
     }
 
     static class AlarmData {

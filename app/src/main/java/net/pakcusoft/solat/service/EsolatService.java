@@ -3,6 +3,7 @@ package net.pakcusoft.solat.service;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -12,7 +13,11 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class EsolatService {
-    static OkHttpClient client = new OkHttpClient();
+    static OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(2, TimeUnit.MINUTES)
+            .writeTimeout(2, TimeUnit.MINUTES)
+            .readTimeout(3, TimeUnit.MINUTES)
+            .build();
 
     public OkHttpClient getClient() {
         return client;
@@ -52,7 +57,7 @@ public class EsolatService {
 
             @Override
             public void onFailure(okhttp3.Call call, IOException e) {
-                e.printStackTrace();
+                Log.d("XXX", "error okhttp", e);
                 listener.failure(e);
             }
         });

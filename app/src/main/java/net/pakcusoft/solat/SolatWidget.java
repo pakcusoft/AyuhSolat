@@ -9,9 +9,13 @@ import static net.pakcusoft.solat.MainActivity.GLOBAL;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.util.Log;
+import android.util.SizeF;
 import android.widget.RemoteViews;
 
 import androidx.core.content.ContextCompat;
@@ -20,6 +24,7 @@ import net.pakcusoft.solat.data.ESolatData;
 import net.pakcusoft.solat.data.WaktuSolat;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,20 +35,25 @@ public class SolatWidget extends AppWidgetProvider {
 
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
-
-        // Construct the RemoteViews object
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.solat_widget);
-        setupData(context, views);
-
-        Intent configIntent = new Intent(context, MainActivity.class);
-        PendingIntent configPendingIntent = PendingIntent.getActivity(context, 0, configIntent, 0);
-        views.setOnClickPendingIntent(R.id.txt_date_w, configPendingIntent);
-
-        // Instruct the widget manager to update the widget
-        appWidgetManager.updateAppWidget(appWidgetId, views);
+        updateView(context, appWidgetManager, appWidgetId, R.layout.solat_widget_4);
     }
 
-    public static void setupData(Context context, RemoteViews views) {
+    public static void setupData(Context context) {
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context.getPackageName(), SolatWidget.class.getName()));
+        for (int appWidgetId : appWidgetIds) {
+            Bundle options = appWidgetManager.getAppWidgetOptions(appWidgetId);
+            int width = options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
+            Log.d("XXX", "new width : " + width);
+            if (width > 276) {
+                updateView(context, appWidgetManager, appWidgetId, R.layout.solat_widget);
+            } else {
+                updateView(context, appWidgetManager, appWidgetId, R.layout.solat_widget_4);
+            }
+        }
+    }
+
+    private static void setupData(Context context, RemoteViews views) {
         SharedPreferences sharedPref = context.getSharedPreferences(GLOBAL, Context.MODE_PRIVATE);
         String state = sharedPref.getString(DEFAULT_STATE, "Wilayah Persekutuan");
         String zone = sharedPref.getString(DEFAULT_ZONE, "Kuala Lumpur");
@@ -123,6 +133,31 @@ public class SolatWidget extends AppWidgetProvider {
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
+    }
+
+    @Override
+    public void onAppWidgetOptionsChanged(Context context, AppWidgetManager appWidgetManager, int appWidgetId, Bundle newOptions) {
+        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions);
+        int width = newOptions.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH);
+        Log.d("XXX", "new width : " + width);
+        if (width > 308) {
+            updateView(context, appWidgetManager, appWidgetId, R.layout.solat_widget);
+        } else {
+            updateView(context, appWidgetManager, appWidgetId, R.layout.solat_widget_4);
+        }
+    }
+
+    static void updateView(Context context, AppWidgetManager appWidgetManager, int appWidgetId, int layout) {
+        // Construct the RemoteViews object
+        RemoteViews views = new RemoteViews(context.getPackageName(), layout);
+        setupData(context, views);
+
+        Intent configIntent = new Intent(context, MainActivity.class);
+        PendingIntent configPendingIntent = PendingIntent.getActivity(context, 0, configIntent, 0);
+        views.setOnClickPendingIntent(R.id.solat_widget_layout, configPendingIntent);
+
+        // Instruct the widget manager to update the widget
+        appWidgetManager.updateAppWidget(appWidgetId, views);
     }
 
     @Override

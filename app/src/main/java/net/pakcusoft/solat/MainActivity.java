@@ -209,10 +209,7 @@ public class MainActivity extends AppCompatActivity {
             fromIntent = ((Activity) ctx).getIntent();
         }
         if (fromIntent != null || dataChanged) {
-            AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(ctx);
-            RemoteViews views = new RemoteViews(ctx.getPackageName(), R.layout.solat_widget);
-            SolatWidget.setupData(ctx, views);
-            appWidgetManager.updateAppWidget(new ComponentName(ctx.getPackageName(), SolatWidget.class.getName()), views);
+            SolatWidget.setupData(ctx);
         }
     }
 

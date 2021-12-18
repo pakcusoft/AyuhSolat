@@ -42,7 +42,7 @@ public class AlarmReceiver extends BroadcastReceiver {
                 updateWidget(ctx);
                 return;
             } else {
-                if (!remEarly) {
+                if (!remEarly || Constant.SYURUK.equalsIgnoreCase(time[0])) {
                     ReminderScheduler.nextSchedule(ctx);
                     return;
                 }
@@ -80,10 +80,7 @@ public class AlarmReceiver extends BroadcastReceiver {
     }
 
     private void updateWidget(Context ctx) {
-        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(ctx);
-        RemoteViews views = new RemoteViews(ctx.getPackageName(), R.layout.solat_widget);
-        SolatWidget.setupData(ctx, views);
-        appWidgetManager.updateAppWidget(new ComponentName(ctx.getPackageName(), SolatWidget.class.getName()), views);
+        SolatWidget.setupData(ctx);
     }
 
 }
