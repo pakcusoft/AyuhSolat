@@ -10,15 +10,14 @@
         android:id="@+id/txt_zone_info"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="68dp"
         android:gravity="center"
         android:keepScreenOn="true"
         android:text="Zone"
-        android:textSize="42sp"
+        android:textSize="32sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/guideline3" />
 
     <TextView
         android:id="@+id/txt_label_subuh"
@@ -26,9 +25,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="62dp"
         android:layout_marginEnd="24dp"
-        android:text="Subuh"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="Subuh"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
         app:layout_constraintTop_toBottomOf="@+id/txt_zone_info" />
@@ -38,9 +37,9 @@
         android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:text="00:00 AM"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="00:00 AM"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/txt_label_subuh"
         app:layout_constraintTop_toTopOf="@+id/txt_label_subuh" />
@@ -51,9 +50,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
-        android:text="Syuruk"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="Syuruk"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
         app:layout_constraintTop_toBottomOf="@+id/txt_label_subuh" />
@@ -63,9 +62,9 @@
         android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:text="00:00 AM"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="00:00 AM"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/txt_label_syuruk"
         app:layout_constraintTop_toTopOf="@+id/txt_label_syuruk" />
@@ -76,9 +75,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
-        android:text="Zohor"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="Zohor"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
         app:layout_constraintTop_toBottomOf="@+id/txt_label_syuruk" />
@@ -88,9 +87,9 @@
         android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:text="00:00 AM"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="00:00 AM"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/txt_label_zohor"
         app:layout_constraintTop_toTopOf="@+id/txt_label_zohor" />
@@ -101,9 +100,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
-        android:text="Asar"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="Asar"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
         app:layout_constraintTop_toBottomOf="@+id/txt_label_zohor" />
@@ -113,9 +112,9 @@
         android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:text="00:00 AM"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="00:00 AM"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/txt_label_asar"
         app:layout_constraintTop_toTopOf="@+id/txt_label_asar" />
@@ -126,9 +125,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
-        android:text="Maghrib"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="Maghrib"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
         app:layout_constraintTop_toBottomOf="@+id/txt_label_asar" />
@@ -138,9 +137,9 @@
         android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:text="00:00 AM"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="00:00 AM"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/txt_label_maghrib"
         app:layout_constraintTop_toTopOf="@+id/txt_label_maghrib" />
@@ -151,9 +150,9 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
-        android:text="Isyak"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="Isyak"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toStartOf="@+id/guideline2"
         app:layout_constraintTop_toBottomOf="@+id/txt_label_maghrib" />
@@ -163,9 +162,9 @@
         android:layout_width="120dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:text="00:00 AM"
         android:gravity="right"
-        android:textSize="35sp"
+        android:text="00:00 AM"
+        android:textSize="25sp"
         android:textStyle="bold"
         app:layout_constraintStart_toEndOf="@+id/txt_label_isyak"
         app:layout_constraintTop_toTopOf="@+id/txt_label_isyak" />
@@ -181,11 +180,11 @@
         android:id="@+id/txt_reminder_sts"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
+        android:layout_marginBottom="0dp"
         android:text="..."
         android:textColor="@color/light_blue_900"
         android:textStyle="italic"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="@+id/guideline4"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
@@ -200,5 +199,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/txt_zone_info" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.1" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.96" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
