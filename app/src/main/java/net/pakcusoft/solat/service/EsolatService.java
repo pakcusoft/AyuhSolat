@@ -3,7 +3,12 @@ package net.pakcusoft.solat.service;
 import android.util.Log;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
 
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -13,10 +18,23 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 public class EsolatService {
+    static final SSLSocketFactory getFactory() {
+        try {
+            final SSLContext sslContext = SSLContext.getInstance("SSL");
+            final TrustManager[] trusts = new TrustManager[]{ new TrustAllCerts() };
+            sslContext.init(null, trusts, new SecureRandom());
+            final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+            return sslSocketFactory;
+        } catch (Exception ex) {
+        }
+        return null;
+    }
+
     static OkHttpClient client = new OkHttpClient.Builder()
             .connectTimeout(2, TimeUnit.MINUTES)
             .writeTimeout(2, TimeUnit.MINUTES)
             .readTimeout(3, TimeUnit.MINUTES)
+            .sslSocketFactory(getFactory(), new TrustAllCerts())
             .build();
 
     public OkHttpClient getClient() {
