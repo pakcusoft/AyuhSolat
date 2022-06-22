@@ -151,7 +151,7 @@ public class ReminderScheduler {
                 .plusDays(1)
                 .withHour(0)
                 .withMinute(0)
-                .withSecond(1);
+                .withSecond(0);
         return new AlarmData(pt.get(Constant.SUBUH),
                 GregorianCalendar.from(ZonedDateTime.of(reminder, ZoneId.systemDefault())),
                 true, true);
