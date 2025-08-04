@@ -1,5 +1,6 @@
 package net.pakcusoft.solat;
 
+import static net.pakcusoft.solat.AlarmReceiver.CHANNEL_REMINDER_ID;
 import static net.pakcusoft.solat.MainActivity.DEFAULT_PRAYER_TIME;
 import static net.pakcusoft.solat.MainActivity.DEFAULT_STATE;
 import static net.pakcusoft.solat.MainActivity.DEFAULT_STATE_SELECTED;
@@ -7,9 +8,15 @@ import static net.pakcusoft.solat.MainActivity.DEFAULT_ZONE;
 import static net.pakcusoft.solat.MainActivity.DEFAULT_ZONE_SELECTED;
 import static net.pakcusoft.solat.MainActivity.GLOBAL;
 
+import android.Manifest;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -17,12 +24,18 @@ import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.Spinner;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 
 import net.pakcusoft.solat.data.Zone;
 import net.pakcusoft.solat.databinding.ActivitySettingBinding;
 
 import java.util.List;
+import java.util.Random;
 
 public class SettingActivity extends AppCompatActivity {
 
@@ -73,8 +86,48 @@ public class SettingActivity extends AppCompatActivity {
                 editor.apply();
             }
         });
+        binding.btnNotifyTest.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                testReminder();
+                view.setEnabled(false);
+                view.postDelayed(() -> view.setEnabled(true), 60000);
+            }
+        });
         setupNegeri();
         setupZon();
+    }
+
+    private void testReminder() {
+        Context ctx = this;
+        Intent newIntent = new Intent(ctx, MainActivity.class);
+        newIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(ctx, 0, newIntent, PendingIntent.FLAG_IMMUTABLE);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ctx);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(ctx, CHANNEL_REMINDER_ID);
+        builder = builder.setSmallIcon(R.drawable.ic_stat_jom_solat_notification)
+                .setContentTitle("Ayuh Solat")
+                .setContentText("Solat itu mencegah kemungkaran")
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            notificationManager.notify(new Random().nextInt(Integer.MAX_VALUE), builder.build());
+            Log.d("XXX", "Sending test notification");
+        } else {
+            AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(this);
+            dialogBuilder.setMessage("Please enable notification").setTitle("Sila aktifkan pemberitahuan");
+            dialogBuilder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                }
+            });
+            AlertDialog dialog = dialogBuilder.create();
+            dialog.show();
+            Log.d("XXX", "No permission granted");
+        }
     }
 
     @Override
