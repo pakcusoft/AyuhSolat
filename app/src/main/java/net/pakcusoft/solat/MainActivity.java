@@ -70,15 +70,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.setting_menu:
-                Intent i = new Intent(MainActivity.this, SettingActivity.class);
-                startActivity(i);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        if (item.getItemId() == R.id.setting_menu) {
+            Intent i = new Intent(MainActivity.this, SettingActivity.class);
+            startActivity(i);
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
+
 
     private void setupData() {
         SharedPreferences sharedPref = getSharedPreferences(GLOBAL, Context.MODE_PRIVATE);

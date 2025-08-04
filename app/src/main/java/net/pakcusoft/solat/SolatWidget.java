@@ -153,7 +153,7 @@ public class SolatWidget extends AppWidgetProvider {
         setupData(context, views);
 
         Intent configIntent = new Intent(context, MainActivity.class);
-        PendingIntent configPendingIntent = PendingIntent.getActivity(context, 0, configIntent, 0);
+        PendingIntent configPendingIntent = PendingIntent.getActivity(context, 0, configIntent, PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(R.id.solat_widget_layout, configPendingIntent);
 
         // Instruct the widget manager to update the widget

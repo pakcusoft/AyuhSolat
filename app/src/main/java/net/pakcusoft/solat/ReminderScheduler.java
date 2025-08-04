@@ -16,6 +16,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.util.Log;
 import android.widget.Toast;
 
 import net.pakcusoft.solat.data.ESolatData;
@@ -83,36 +84,36 @@ public class ReminderScheduler {
         try {
             ESolatData data = Utils.convertJson(defPrayerTime);
             AlarmData nextAlarm = getNext(data.getWaktuSolatList());
-            if (nextAlarm != null) {
-                AlarmManager alarmManager = (AlarmManager) ctx.getSystemService(ALARM_SERVICE);
+            AlarmManager alarmManager = (AlarmManager) ctx.getSystemService(ALARM_SERVICE);
 
-                Intent alarmIntent = new Intent(ctx, AlarmReceiver.class);
-                alarmIntent.putExtra("reminder", nextAlarm.reminder);
-                alarmIntent.putExtra("specialAlarm", nextAlarm.specialAlarm);
-                alarmIntent.putExtra("time", nextAlarm.waktuSolat.toString());
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(ctx, REQ_CODE,
-                        alarmIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            Intent alarmIntent = new Intent(ctx, AlarmReceiver.class);
+            alarmIntent.putExtra("reminder", nextAlarm.reminder);
+            alarmIntent.putExtra("specialAlarm", nextAlarm.specialAlarm);
+            alarmIntent.putExtra("time", nextAlarm.waktuSolat.toString());
+            PendingIntent pendingIntent = PendingIntent.getBroadcast(ctx, REQ_CODE,
+                    alarmIntent, PendingIntent.FLAG_IMMUTABLE);
 
-                Intent newIntent = new Intent(ctx, MainActivity.class);
-                newIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                PendingIntent newPendingIntent = PendingIntent.getActivity(ctx, 0, newIntent, 0);
+            Intent newIntent = new Intent(ctx, MainActivity.class);
+            newIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            PendingIntent newPendingIntent = PendingIntent.getActivity(ctx, 0, newIntent, PendingIntent.FLAG_IMMUTABLE);
+            if (alarmManager.canScheduleExactAlarms()) {
                 alarmManager.setAlarmClock(new AlarmManager.AlarmClockInfo(nextAlarm.time.getTimeInMillis(), newPendingIntent), pendingIntent);
+            }
 
-                boolean remAzan = sharedPref.getBoolean(SETTING_REMINDER_AZAN, true);
-                boolean remEarly = sharedPref.getBoolean(SETTING_REMINDER_EARLY, true);
-                if (nextAlarm.reminder) {
-                    if (remEarly && !nextAlarm.specialAlarm) {
-                        return "Notis Seterusnya: " + REMINDER_BEFORE_MINUTE + " minit sebelum " + Utils.toDisplayTime(nextAlarm.waktuSolat.getTime());
-                    }
-                } else {
-                    if (remAzan) {
-                        return "Notis Seterusnya: " + Utils.toDisplayTime(nextAlarm.waktuSolat.getTime());
-                    }
+            boolean remAzan = sharedPref.getBoolean(SETTING_REMINDER_AZAN, true);
+            boolean remEarly = sharedPref.getBoolean(SETTING_REMINDER_EARLY, true);
+            if (nextAlarm.reminder) {
+                if (remEarly && !nextAlarm.specialAlarm) {
+                    return "Notis Seterusnya: " + REMINDER_BEFORE_MINUTE + " minit sebelum " + Utils.toDisplayTime(nextAlarm.waktuSolat.getTime());
+                }
+            } else {
+                if (remAzan) {
+                    return "Notis Seterusnya: " + Utils.toDisplayTime(nextAlarm.waktuSolat.getTime());
                 }
             }
             return ""; //no alert for azan & reminder
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e("ERR", "Error while setting reminder", e);
         }
         return "ERROR: No Reminder";
     }
